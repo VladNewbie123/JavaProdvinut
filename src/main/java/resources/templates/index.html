@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Курс Валюти</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h2 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+    <script>
+    function getExchangeRate() {
+        let currency = document.getElementById("currency").value.toUpperCase();
+        let url = `http://localhost:8080/api/exchange-rate/${currency}`; // Замінили шлях на правильний з параметром валюты
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Помилка отримання JSON: " + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("JSON зчитано:", data); // Перевірка в консолі
+                if (data && data.rate) {
+                    document.getElementById("result").innerHTML =
+                        "Курс " + currency + ": " + data.rate;
+                    document.getElementById("result").classList.remove("error");
+                } else {
+                    document.getElementById("result").innerHTML = "Валюта не знайдена";
+                    document.getElementById("result").classList.add("error");
+                }
+            })
+            .catch(error => {
+                console.error("Помилка:", error);
+                document.getElementById("result").innerHTML = "Помилка отримання даних";
+                document.getElementById("result").classList.add("error");
+            });
+    }
+</script>
+</head>
+<body>
+<div class="container">
+    <h2>Отримати курс валюти</h2>
+    <input type="text" id="currency" placeholder="Введіть валюту (USD, EUR...)">
+    <button onclick="getExchangeRate()">Отримати курс</button>
+    <p id="result"></p>
+</div>
+
+</body>
+</html>
