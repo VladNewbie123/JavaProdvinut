@@ -32,19 +32,19 @@ public class AppService {
     }
 
     public ExchangeRate getExchangeRate(String currency) {
-        System.out.println("Запит отримано: " + currency); // Друкуємо валюту в логах
+        System.out.println("Запит отримано: " + currency); 
 
         LocalDate today = LocalDate.now();
         Optional<ExchangeRate> existingRate = repository.findByCurrencyAndDate(currency, today);
         if (existingRate.isPresent()) {
-            System.out.println("Знайдено в БД: " + existingRate.get()); // Друкуємо знайдений курс
+            System.out.println("Знайдено в БД: " + existingRate.get());
             return existingRate.get();
         }
 
-        // Отримуємо курс валют з ПриватБанку
+        
         String url = "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5";
         var rates = restTemplate.getForObject(url, List.class);
-        System.out.println("Отримано з ПриватБанку: " + rates); // Друкуємо API-відповідь
+        System.out.println("Отримано з ПриватБанку: " + rates); 
 
         if (rates != null) {
             for (var obj : rates) {
@@ -54,7 +54,7 @@ public class AppService {
                     double saleRate = Double.parseDouble(rateMap.get("sale").toString());
                     ExchangeRate rate = new ExchangeRate(currency, saleRate, today);
                     repository.save(rate);
-                    System.out.println("Збережено в БД: " + rate); // Лог збереження
+                    System.out.println("Збережено в БД: " + rate); 
                     return rate;
                 }
             }
@@ -75,7 +75,7 @@ public class AppService {
         ExcelExporter.generateExcel(response, rates);
     }
 
-    // Метод для парсингу новин із Ukr.net
+  
     public List<String> getNewsFromUkrNet() {
         List<String> newsList = new ArrayList<>();
         String url = "https://www.ukr.net/";
