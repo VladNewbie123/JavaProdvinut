@@ -82,12 +82,12 @@ public class AppService {
 
         try {
             Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0") // Додаємо userAgent, щоб не блокував сервер
+                    .userAgent("Mozilla/5.0")
                     .timeout(10_000)
                     .get();
 
             System.out.println("Отриманий HTML-код:");
-            System.out.println(doc.html()); // Друкуємо весь HTML у консоль
+            System.out.println(doc.html()); 
 
         } catch (IOException e) {
             e.printStackTrace();
