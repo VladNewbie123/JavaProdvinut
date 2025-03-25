@@ -2,7 +2,6 @@ package com.example.demo.services;
 
 import com.example.demo.services.models.ExchangeRate;
 import com.example.demo.repositories.ExchangeRateRepository;
-import com.example.demo.services.models.SimpleExchangeRate;
 import com.example.demo.utils.ExcelExporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
