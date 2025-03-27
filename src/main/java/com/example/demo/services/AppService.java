@@ -7,10 +7,11 @@ import com.example.demo.repositories.ProductRepository;
 import com.example.demo.utils.ExcelExporter;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -18,19 +19,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
 public class AppService {
 
     private final ExchangeRateRepository repository;
     private final RestTemplate restTemplate;
-    private final ProductRepository productRepository;
+    private ProductRepository productRepository;
 
     public AppService(ExchangeRateRepository repository, ProductRepository productRepository) {
         this.repository = repository;
         this.restTemplate = new RestTemplate();
         this.productRepository = productRepository;
     }
-
 
     public ExchangeRate getExchangeRate(String currency) {
         System.out.println("Запит отримано: " + currency);
@@ -50,7 +51,7 @@ public class AppService {
         if (rates != null) {
             for (var obj : rates) {
                 var rateMap = (java.util.Map<String, Object>) obj;
-                String ccy = (String) rateMap.get("ccy");
+                String ccy = (String) rateMap.get("ccy"); // Явно перетворюємо в String
                 if (ccy.equalsIgnoreCase(currency)) {
                     double saleRate = Double.parseDouble(rateMap.get("sale").toString());
                     ExchangeRate rate = new ExchangeRate(currency, saleRate, today);
@@ -64,7 +65,6 @@ public class AppService {
         System.out.println("Курс не знайдено");
         return null;
     }
-
 
 
     public List<ExchangeRate> getAllRates() {
@@ -107,31 +107,22 @@ public class AppService {
 
         try {
             Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0") // Добавляем userAgent
+                    .userAgent("Mozilla/5.0")
                     .timeout(10_000)
-                    .header("Content-Type", "text/html; charset=UTF-8")  // Указываем кодировку
+                    .header("Content-Type", "text/html; charset=UTF-8")
                     .get();
 
-            System.out.println("Page Charset: " + doc.charset().name());  // Проверяем кодировку
-
+            System.out.println("Page Charset: " + doc.charset().name());
             for (Element el : doc.getElementsByClass("page__title overflow")) {
                 String title = el.text();
-                System.out.println("Parsed title: " + title);  // Выводим заголовок на консоль
+                System.out.println("Parsed title: " + title);
                 Product product = new Product(title);
                 productList.add(product);
                 productRepository.save(product);
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return productList;
-    }
-
-
-
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
     }
 }
