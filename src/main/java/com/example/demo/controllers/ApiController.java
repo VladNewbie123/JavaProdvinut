@@ -1,21 +1,14 @@
 package com.example.demo.controllers;
 
-import ch.qos.logback.core.model.Model;
-import com.example.demo.services.models.ExchangeRate;
+import com.example.demo.models.ExchangeRate;
+import com.example.demo.models.Product;
 import com.example.demo.services.AppService;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -45,8 +38,18 @@ public class ApiController {
         service.exportToExcel(response);
     }
 
-    @GetMapping("/news")
-    public ResponseEntity<List<String>> getNews() {
-        return ResponseEntity.ok(service.getNewsFromUkrNet());
+    @GetMapping("/site-title")
+    public ResponseEntity<List<String>> getWebsiteTitle() {
+        return ResponseEntity.ok(service.getWebsiteTitle());
+    }
+
+    @GetMapping("/parse-products")
+    public ResponseEntity<List<Product>> parseProducts() {
+        return ResponseEntity.ok(service.parseFoxtrotProducts());
+    }
+
+    @GetMapping("/products")
+    public ResponseEntity<List<Product>> getProducts() {
+        return ResponseEntity.ok(service.getAllProducts());
     }
 }

@@ -1,61 +1,61 @@
 package com.example.demo.services;
 
-import com.example.demo.services.models.ExchangeRate;
+import com.example.demo.models.ExchangeRate;
+import com.example.demo.models.Product;
 import com.example.demo.repositories.ExchangeRateRepository;
-import com.example.demo.services.models.SimpleExchangeRate;
+import com.example.demo.repositories.ProductRepository;
 import com.example.demo.utils.ExcelExporter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.jsoup.nodes.Element;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class AppService {
 
     private final ExchangeRateRepository repository;
     private final RestTemplate restTemplate;
+    private final ProductRepository productRepository;
 
-    public AppService(ExchangeRateRepository repository) {
+    public AppService(ExchangeRateRepository repository, ProductRepository productRepository) {
         this.repository = repository;
         this.restTemplate = new RestTemplate();
+        this.productRepository = productRepository;
     }
 
+
     public ExchangeRate getExchangeRate(String currency) {
-        System.out.println("Запит отримано: " + currency); // Друкуємо валюту в логах
+        System.out.println("Запит отримано: " + currency);
 
         LocalDate today = LocalDate.now();
         Optional<ExchangeRate> existingRate = repository.findByCurrencyAndDate(currency, today);
         if (existingRate.isPresent()) {
-            System.out.println("Знайдено в БД: " + existingRate.get()); // Друкуємо знайдений курс
+            System.out.println("Знайдено в БД: " + existingRate.get());
             return existingRate.get();
         }
 
-        // Отримуємо курс валют з ПриватБанку
+
         String url = "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5";
         var rates = restTemplate.getForObject(url, List.class);
-        System.out.println("Отримано з ПриватБанку: " + rates); // Друкуємо API-відповідь
+        System.out.println("Отримано з ПриватБанку: " + rates);
 
         if (rates != null) {
             for (var obj : rates) {
                 var rateMap = (java.util.Map<String, Object>) obj;
-                String ccy = (String) rateMap.get("ccy"); // Явно перетворюємо в String
+                String ccy = (String) rateMap.get("ccy");
                 if (ccy.equalsIgnoreCase(currency)) {
                     double saleRate = Double.parseDouble(rateMap.get("sale").toString());
                     ExchangeRate rate = new ExchangeRate(currency, saleRate, today);
                     repository.save(rate);
-                    System.out.println("Збережено в БД: " + rate); // Лог збереження
+                    System.out.println("Збережено в БД: " + rate);
                     return rate;
                 }
             }
@@ -76,27 +76,62 @@ public class AppService {
         ExcelExporter.generateExcel(response, rates);
     }
 
-    // Метод для парсингу новин із Ukr.net
-    public List<String> getNewsFromUkrNet() {
-        List<String> newsList = new ArrayList<>();
-        String url = "https://www.ukr.net/";
+
+    public List<String> getWebsiteTitle() {
+        String url = "https://www.foxtrot.com.ua/";
+
+        try {
+            System.out.println("Запит до сайту: " + url);
+
+            Document doc = Jsoup.connect(url).get();
+
+
+            String charset = doc.outputSettings().charset().name();
+            System.out.println("Використовується кодування: " + charset);
+
+            String title = doc.title();
+            System.out.println("Отриманий title: " + title);
+
+            return List.of(title);
+
+        } catch (IOException e) {
+            System.out.println("Помилка отримання сторінки!");
+            e.printStackTrace();
+            return List.of("Помилка отримання назви сайту!");
+        }
+    }
+
+    public List<Product> parseFoxtrotProducts() {
+        String url = "https://www.foxtrot.com.ua/uk/shop/noutbuki-lenovo-loq-15iax9-83gs003cra.html";
+        List<Product> productList = new ArrayList<>();
 
         try {
             Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0") // Додаємо userAgent, щоб не блокував сервер
+                    .userAgent("Mozilla/5.0") // Добавляем userAgent
                     .timeout(10_000)
+                    .header("Content-Type", "text/html; charset=UTF-8")  // Указываем кодировку
                     .get();
 
-            System.out.println("Отриманий HTML-код:");
-            System.out.println(doc.html()); // Друкуємо весь HTML у консоль
+            System.out.println("Page Charset: " + doc.charset().name());  // Проверяем кодировку
+
+            for (Element el : doc.getElementsByClass("page__title overflow")) {
+                String title = el.text();
+                System.out.println("Parsed title: " + title);  // Выводим заголовок на консоль
+                Product product = new Product(title);
+                productList.add(product);
+                productRepository.save(product);
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
-            newsList.add("Помилка отримання новин!");
         }
 
-        return newsList;
+        return productList;
     }
 
 
+
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
 }

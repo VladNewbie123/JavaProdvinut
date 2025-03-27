@@ -1,6 +1,6 @@
 package com.example.demo.utils;
 
-import com.example.demo.services.models.ExchangeRate;
+import com.example.demo.models.ExchangeRate;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
